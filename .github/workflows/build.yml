@@ -1,0 +1,59 @@
+name: Build Parsa VPN APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+          cache: true
+
+      - name: Backup custom files
+        run: |
+          mkdir -p /tmp/backup
+          cp pubspec.yaml /tmp/backup/ 2>/dev/null || true
+          cp -r lib /tmp/backup/ 2>/dev/null || true
+
+      - name: Create Flutter scaffolding
+        run: |
+          flutter create --org com.parsa --project-name parsa_vpn --platforms android .
+
+      - name: Restore custom files
+        run: |
+          cp /tmp/backup/pubspec.yaml ./pubspec.yaml
+          if [ -d /tmp/backup/lib ]; then
+            rm -rf lib
+            cp -r /tmp/backup/lib ./lib
+          fi
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: parsa-vpn-apk
+          path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 30

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/config_model.dart';
@@ -70,20 +70,20 @@ class _HomeScreenState extends State<HomeScreen>
     _statusSub = _vpn.statusStream.listen((status) {
       if (!mounted) return;
       setState(() {
-        if (status.state == V2RayStatus.connected) {
+        if (status.state == 'connected') {
           _connected = true;
           _connecting = false;
           _statusText = 'متصل';
           _connectTime ??= DateTime.now();
           _startDurationTimer();
-        } else if (status.state == V2RayStatus.disconnected) {
+        } else if (status.state == 'disconnected') {
           _connected = false;
           _connecting = false;
           _statusText = 'قطع';
           _downSpeed = null;
           _upSpeed = null;
           _stopDurationTimer();
-        } else if (status.state == V2RayStatus.connecting) {
+        } else if (status.state == 'connecting') {
           _connecting = true;
           _statusText = 'در حال اتصال...';
         }
@@ -113,8 +113,6 @@ class _HomeScreenState extends State<HomeScreen>
     _durationTimer?.cancel();
     super.dispose();
   }
-
-  // ════════ جستجوی کانفیگ VIP ════════
 
   Future<void> _searchVipConfigs() async {
     setState(() {
@@ -156,37 +154,32 @@ class _HomeScreenState extends State<HomeScreen>
 
     if (!mounted) return;
 
-    // فقط ۱۰ تای برتر
     final top10 = pinged.take(10).toList();
 
-    // اسم‌گذاری با Parsa VIP
+    final named = <V2RayConfig>[];
     for (int i = 0; i < top10.length; i++) {
-      top10[i] = V2RayConfig(
+      named.add(V2RayConfig(
         raw: top10[i].raw,
         protocol: top10[i].protocol,
         name: 'Parsa VIP ${(i + 1).toString().padLeft(2, '0')}',
         host: top10[i].host,
         port: top10[i].port,
-        network: top10[i].network,
-        security: top10[i].security,
         tcpPing: top10[i].tcpPing,
         realPing: top10[i].realPing,
-      );
+      ));
     }
 
-    await StorageService.saveConfigs(top10);
+    await StorageService.saveConfigs(named);
 
     setState(() {
-      _vipConfigs = top10;
+      _vipConfigs = named;
       _loading = false;
       _progressText = '';
-      if (top10.isNotEmpty) _selected = top10.first;
+      if (named.isNotEmpty) _selected = named.first;
     });
 
     _snack('۱۰ کانفیگ VIP آماده شد');
   }
-
-  // ════════ اتصال ════════
 
   Future<void> _toggleConnection() async {
     if (_connecting) return;
@@ -343,7 +336,8 @@ class _HomeScreenState extends State<HomeScreen>
                   MaterialPageRoute(builder: (_) => const AdminScreen()),
                 );
               },
-              icon: const Icon(Icons.admin_panel_settings, color: AppColors.neon),
+              icon: const Icon(Icons.admin_panel_settings,
+                  color: AppColors.neon),
             ),
           IconButton(
             onPressed: _openConfigs,

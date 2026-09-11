@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_v2ray_client/flutter_v2ray.dart';
+import 'package:flutter/material.dart'; 
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/config_model.dart';
